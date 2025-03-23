@@ -38,14 +38,42 @@ class ConfigConnector:
         # OpenCTI configurations
 
         # Connector extra parameters
-        self.api_base_url = get_config_variable(
+        self.misp_api_base_url = get_config_variable(
             "MISP_EXPORTER_API_BASE_URL",
             ["misp_exporter", "api_base_url"],
             self.load,
         )
 
-        self.api_key = get_config_variable(
+        self.misp_api_key = get_config_variable(
             "MISP_EXPORTER_API_KEY",
             ["misp_exporter", "api_key"],
             self.load,
+        )
+
+        self.misp_distribution_level = get_config_variable(
+            "MISP_EXPORTER_DISTRIBUTION_LEVEL",
+            ["misp_exporter", "distribution_level"],
+            self.load,
+            default=0,  # Own organization only
+        )
+
+        self.misp_threat_level_id = get_config_variable(
+            "MISP_EXPORTER_THREAT_LEVEL_ID",
+            ["misp_exporter", "threat_level_id"],
+            self.load,
+            default=4,  # Undefined
+        )
+
+        self.misp_analysis = get_config_variable(
+            "MISP_EXPORTER_ANALYSIS",
+            ["misp_exporter", "analysis"],
+            self.load,
+            default=0,  # Initial
+        )
+
+        self.misp_tag_prefix = get_config_variable(
+            "MISP_EXPORTER_TAG_PREFIX",
+            ["misp_exporter", "tag_prefix"],
+            self.load,
+            default="opencti",
         )
