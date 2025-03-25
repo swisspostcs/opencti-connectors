@@ -38,16 +38,23 @@ class ConfigConnector:
         # OpenCTI configurations
 
         # Connector extra parameters
-        self.misp_api_base_url = get_config_variable(
-            "MISP_EXPORTER_API_BASE_URL",
-            ["misp_exporter", "api_base_url"],
+        self.misp_url = get_config_variable(
+            "MISP_EXPORTER_URL",
+            ["misp_exporter", "url"],
             self.load,
         )
 
-        self.misp_api_key = get_config_variable(
-            "MISP_EXPORTER_API_KEY",
-            ["misp_exporter", "api_key"],
+        self.misp_key = get_config_variable(
+            "MISP_EXPORTER_KEY",
+            ["misp_exporter", "key"],
             self.load,
+        )
+
+        self.misp_ssl_verify = get_config_variable(
+            "MISP_EXPORTER_SSL_VERIFY",
+            ["misp_exporter", "ssl_verify"],
+            self.load,
+            default=True,
         )
 
         self.misp_distribution_level = get_config_variable(

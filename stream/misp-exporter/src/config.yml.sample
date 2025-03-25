@@ -13,5 +13,5 @@ connector:
   live_stream_no_dependencies: true
 
 misp_exporter:
-  api_base_url: 'ChangeMe'
-  api_key: 'ChangeMe'
+  url: 'ChangeMe'
+  key: 'ChangeMe'

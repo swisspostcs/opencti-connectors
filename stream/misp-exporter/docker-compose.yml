@@ -16,8 +16,8 @@ services:
       - CONNECTOR_LIVE_STREAM_NO_DEPENDENCIES=true
 
       # Connector's custom execution parameters
-      - MISP_EXPORTER_API_BASE_URL=CHANGEME
-      - MISP_EXPORTER_API_KEY=CHANGEME
+      - MISP_EXPORTER_URL=CHANGEME
+      - MISP_EXPORTER_KEY=CHANGEME
 
       # Add proxy parameters below if needed
       # - HTTP_PROXY=CHANGEME
