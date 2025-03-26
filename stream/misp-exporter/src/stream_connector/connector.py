@@ -47,16 +47,11 @@ class ConnectorMispExporter:
         self.helper = helper
 
         # Initialize MISP connection
-        try:
-            self.misp = PyMISP(
-                url=self.config.misp_url,
-                key=self.config.misp_key,
-                ssl=self.config.misp_ssl_verify,
-            )
-            self.helper.log_info("Connected to MISP")
-        except Exception as e:
-            self.helper.log_error(f"Failed to connect to MISP: {str(e)}")
-            raise e
+        self.misp = PyMISP(
+            url=self.config.misp_url,
+            key=self.config.misp_key,
+            ssl=self.config.misp_ssl_verify,
+        )
 
     def check_stream_id(self) -> None:
         """
@@ -120,25 +115,21 @@ class ConnectorMispExporter:
         :param event: MISP Event object
         :param internal_id: OpenCTI internal ID
         """
-        try:
-            res = self.misp.add_event(event, pythonify=True)
+        added = self.misp.add_event(event, pythonify=True)
 
-            # Create an external reference to the MISP event
-            external_reference = self.helper.api.external_reference.create(
-                source_name="MISP",
-                url=f"{self.config.misp_url}/events/view/{res.id}",
-                external_id=str(res.id),
-                description="MISP Event",
-            )
+        # Create an external reference to the MISP event
+        external_reference = self.helper.api.external_reference.create(
+            source_name="MISP",
+            url=f"{self.config.misp_url}/events/view/{added.id}",
+            external_id=str(added.id),
+            description="MISP Event",
+        )
 
-            # Link the reference to the OpenCTI indicator
-            self.helper.api.stix_domain_object.add_external_reference(
-                id=internal_id,
-                external_reference_id=external_reference["id"],
-            )
-        except Exception as e:
-            self.helper.log_error(f"Failed to create MISP event: {str(e)}")
-            raise e
+        # Link the reference to the OpenCTI indicator
+        self.helper.api.stix_domain_object.add_external_reference(
+            id=internal_id,
+            external_reference_id=external_reference["id"],
+        )
 
     def _handle_create(self, data: Any) -> None:
         """
@@ -149,7 +140,7 @@ class ConnectorMispExporter:
         self.helper.connector_logger.info(
             f"[CREATE] Processing {data['type']} {internal_id}"
         )
-        self.misp.update_event
+
         if data["type"] == "indicator":
             event = self._create_event_indicator(data)
             self._add_event(event, internal_id)
@@ -251,8 +242,7 @@ class ConnectorMispExporter:
             if msg.event == "delete":
                 self._handle_delete(data)
         except Exception as e:
-            self.helper.connector_logger.debug(f"Message: {data}")
-            raise ValueError(f"Cannot process the message: {str(e)}") from e
+            raise ValueError("Cannot process the message") from e
 
     def run(self) -> None:
         """
