@@ -2,12 +2,13 @@ import json
 from datetime import datetime
 from typing import Any
 
-from pycti import OpenCTIConnectorHelper
-from pymisp import PyMISP, MISPEvent
 from misp_stix_converter import ExternalSTIX2toMISPParser
+from pycti import OpenCTIConnectorHelper
+from pymisp import MISPEvent, PyMISP
 from stix2 import Bundle
 
 from .config_loader import ConfigConnector
+
 
 class ConnectorMispExporter:
     """
@@ -36,7 +37,7 @@ class ConnectorMispExporter:
 
     """
 
-    def __init__(self, config: ConfigConnector, helper: OpenCTIConnectorHelper):
+    def __init__(self, config: ConfigConnector, helper: OpenCTIConnectorHelper) -> None:
         """
         Initialize the Connector with necessary configurations
         """
@@ -68,36 +69,11 @@ class ConnectorMispExporter:
         ):
             raise ValueError("Missing stream ID, please check your configurations.")
 
-    def _add_event(self, event: MISPEvent, internal_id: str) -> None:
-        """
-        Create a MISP event
-        :param event: MISP Event object
-        :param internal_id: OpenCTI internal ID
-        """
-        try:
-            self.misp.add_event(event, pythonify=True)
-
-            # Create an external reference to the MISP event
-            external_reference = self.helper.api.external_reference.create(
-                source_name="MISP",
-                url=f"{self.config.misp_api_base_url}/events/view/{event.id}",
-                external_id=str(event.id),
-                description="MISP Event",
-            )
-
-            # Link the reference to the OpenCTI indicator
-            self.helper.api.stix_domain_object.add_external_reference(
-                id=internal_id,
-                external_reference_id=external_reference["id"],
-            )
-        except Exception as e:
-            self.helper.log_error(f"Failed to create MISP event: {str(e)}")
-            raise e
-
-    def _create_event_indicator(self, data: Any) -> None:
+    def _create_event_indicator(self, data: Any) -> MISPEvent:
         """
         Create a MISP event from an OpenCTI indicator
         :param data: OpenCTI indicator object
+        :return: MISP Event object
         """
         internal_id = self.helper.get_attribute_in_extension("id", data)
 
@@ -136,25 +112,121 @@ class ConnectorMispExporter:
             for label in data["labels"]:
                 event.add_tag(label)
 
-        self._add_event(event, internal_id)
+        return event
 
-        self.helper.connector_logger.info(
-            f"[CREATE] Created MISP event for indicator {internal_id}"
-        )
+    def _add_event(self, event: MISPEvent, internal_id: str) -> None:
+        """
+        Add an event to MISP
+        :param event: MISP Event object
+        :param internal_id: OpenCTI internal ID
+        """
+        try:
+            res = self.misp.add_event(event, pythonify=True)
 
-    def _handle_create(self, data: Any):
+            # Create an external reference to the MISP event
+            external_reference = self.helper.api.external_reference.create(
+                source_name="MISP",
+                url=f"{self.config.misp_url}/events/view/{res.id}",
+                external_id=str(res.id),
+                description="MISP Event",
+            )
+
+            # Link the reference to the OpenCTI indicator
+            self.helper.api.stix_domain_object.add_external_reference(
+                id=internal_id,
+                external_reference_id=external_reference["id"],
+            )
+        except Exception as e:
+            self.helper.log_error(f"Failed to create MISP event: {str(e)}")
+            raise e
+
+    def _handle_create(self, data: Any) -> None:
         """
         Handle creation
         :param data: Data from the stream
-        :return: None
         """
-        self.helper.connector_logger.info(f"[CREATE] Processing {data['type']}")
-
+        internal_id = self.helper.get_attribute_in_extension("id", data)
+        self.helper.connector_logger.info(
+            f"[CREATE] Processing {data['type']} {internal_id}"
+        )
+        self.misp.update_event
         if data["type"] == "indicator":
-            self._create_event_indicator(data)
+            event = self._create_event_indicator(data)
+            self._add_event(event, internal_id)
+            self.helper.connector_logger.info(
+                f"[CREATE] Created MISP event for indicator {internal_id}"
+            )
         else:
             self.helper.connector_logger.debug(
                 f"[CREATE] {data['type']} not implemented"
+            )
+
+    def _handle_update(self, data: Any) -> None:
+        """
+        Handle update
+        :param data: Data from the stream
+        """
+        internal_id = self.helper.get_attribute_in_extension("id", data)
+        self.helper.connector_logger.info(
+            f"[UPDATE] Processing {data['type']} {internal_id}"
+        )
+
+        if data["type"] == "indicator":
+            event = self._create_event_indicator(data)
+
+            # Look for the MISP event by the OpenCTI ID
+            to_update = self.misp.search(
+                tags=f"{self.config.misp_tag_prefix}:id={internal_id}",
+                pythonify=True,
+            )
+
+            # Update the MISP event if it exists, otherwise create a new one
+            if len(to_update):
+                event.uuid = to_update[0].uuid  # Keep the same UUID
+                self.misp.update_event(event, to_update[0].id, pythonify=True)
+                self.helper.connector_logger.info(
+                    f"[UPDATE] Updated MISP event for indicator {internal_id}"
+                )
+            else:
+                self._add_event(event, internal_id)
+                self.helper.connector_logger.info(
+                    f"[UPDATE] Created MISP event for indicator {internal_id}"
+                )
+        else:
+            self.helper.connector_logger.debug(
+                f"[UPDATE] {data['type']} not implemented"
+            )
+
+    def _handle_delete(self, data: Any) -> None:
+        """
+        Handle deletion
+        :param data: Data from the stream
+        """
+        internal_id = self.helper.get_attribute_in_extension("id", data)
+        self.helper.connector_logger.info(
+            f"[DELETE] Processing {data['type']} {internal_id}"
+        )
+
+        if data["type"] == "indicator":
+            # Look for the MISP event by the OpenCTI ID
+            to_delete = self.misp.search(
+                tags=f"{self.config.misp_tag_prefix}:id={internal_id}",
+                pythonify=True,
+            )
+
+            # Delete the MISP event if it exists
+            if len(to_delete):
+                self.misp.delete_event(to_delete[0])
+                self.helper.connector_logger.info(
+                    f"[DELETE] Deleted MISP event for indicator {internal_id}"
+                )
+            else:
+                self.helper.connector_logger.debug(
+                    f"[DELETE] MISP event for indicator {internal_id} not found"
+                )
+        else:
+            self.helper.connector_logger.debug(
+                f"[DELETE] {data['type']} not implemented"
             )
 
     def process_message(self, msg: Any) -> None:
@@ -172,12 +244,12 @@ class ConnectorMispExporter:
 
             if msg.event == "create":
                 self._handle_create(data)
-        
+
             if msg.event == "update":
-                self.helper.connector_logger.debug("[UPDATE] event not implemented")
+                self._handle_update(data)
 
             if msg.event == "delete":
-                self.helper.connector_logger.debug("[DELETE] event not implemented")
+                self._handle_delete(data)
         except Exception as e:
             self.helper.connector_logger.debug(f"Message: {data}")
             raise ValueError(f"Cannot process the message: {str(e)}") from e
