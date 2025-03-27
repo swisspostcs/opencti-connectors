@@ -86,8 +86,9 @@ class ConnectorMispExporter:
         parser.load_stix_bundle(stix_bundle)
         parser.parse_stix_bundle(stix_bundle)
 
+        # Update the MISP event with OpenCTI data
         event = parser.misp_event
-        # Replace the event info with the indicator description
+        event.uuid = internal_id
         event.info = data.get("description", "OpenCTI Indicator")
         event.distribution = self.config.misp_distribution_level
         event.threat_level_id = self.config.misp_threat_level_id
@@ -99,9 +100,6 @@ class ConnectorMispExporter:
                 data["created"], "%Y-%m-%dT%H:%M:%S.%fZ"
             ).strftime("%Y-%m-%d")
 
-        # Add tag with the OpenCTI ID
-        event.add_tag(f"{self.config.misp_tag_prefix}:id={internal_id}")
-
         # Add tags from OpenCTI labels
         if "labels" in data:
             for label in data["labels"]:
@@ -109,13 +107,17 @@ class ConnectorMispExporter:
 
         return event
 
-    def _add_event(self, event: MISPEvent, internal_id: str) -> None:
+    def _add_event(self, event: MISPEvent) -> None:
         """
         Add an event to MISP
         :param event: MISP Event object
-        :param internal_id: OpenCTI internal ID
         """
         added = self.misp.add_event(event, pythonify=True)
+        if not self.misp.event_exists(event.uuid):
+            self.helper.connector_logger.warning(
+                f"Failed to create MISP event for indicator {event.uuid}"
+            )
+            return
 
         # Create an external reference to the MISP event
         external_reference = self.helper.api.external_reference.create(
@@ -127,7 +129,7 @@ class ConnectorMispExporter:
 
         # Link the reference to the OpenCTI indicator
         self.helper.api.stix_domain_object.add_external_reference(
-            id=internal_id,
+            id=event.uuid,
             external_reference_id=external_reference["id"],
         )
 
@@ -142,8 +144,14 @@ class ConnectorMispExporter:
         )
 
         if data["type"] == "indicator":
+            if self.misp.event_exists(internal_id):
+                self.helper.connector_logger.debug(
+                    f"[CREATE] MISP event for indicator {internal_id} already exists"
+                )
+                return
+
             event = self._create_event_indicator(data)
-            self._add_event(event, internal_id)
+            self._add_event(event)
             self.helper.connector_logger.info(
                 f"[CREATE] Created MISP event for indicator {internal_id}"
             )
@@ -165,21 +173,14 @@ class ConnectorMispExporter:
         if data["type"] == "indicator":
             event = self._create_event_indicator(data)
 
-            # Look for the MISP event by the OpenCTI ID
-            to_update = self.misp.search(
-                tags=f"{self.config.misp_tag_prefix}:id={internal_id}",
-                pythonify=True,
-            )
-
             # Update the MISP event if it exists, otherwise create a new one
-            if len(to_update):
-                event.uuid = to_update[0].uuid  # Keep the same UUID
-                self.misp.update_event(event, to_update[0].id, pythonify=True)
+            if self.misp.event_exists(internal_id):
+                self.misp.update_event(event, pythonify=True)
                 self.helper.connector_logger.info(
                     f"[UPDATE] Updated MISP event for indicator {internal_id}"
                 )
             else:
-                self._add_event(event, internal_id)
+                self._add_event(event)
                 self.helper.connector_logger.info(
                     f"[UPDATE] Created MISP event for indicator {internal_id}"
                 )
@@ -199,15 +200,9 @@ class ConnectorMispExporter:
         )
 
         if data["type"] == "indicator":
-            # Look for the MISP event by the OpenCTI ID
-            to_delete = self.misp.search(
-                tags=f"{self.config.misp_tag_prefix}:id={internal_id}",
-                pythonify=True,
-            )
-
             # Delete the MISP event if it exists
-            if len(to_delete):
-                self.misp.delete_event(to_delete[0])
+            if self.misp.event_exists(internal_id):
+                self.misp.delete_event(internal_id)
                 self.helper.connector_logger.info(
                     f"[DELETE] Deleted MISP event for indicator {internal_id}"
                 )
