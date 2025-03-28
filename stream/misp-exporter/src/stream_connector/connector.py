@@ -70,12 +70,12 @@ class ConnectorMispExporter:
         :param data: OpenCTI indicator object
         :return: MISP Event object
         """
-        internal_id = self.helper.get_attribute_in_extension("id", data)
+        uuid = self.helper.get_attribute_in_extension("id", data)
 
         # Parse the indicator pattern and add attributes
         if "pattern" not in data or data.get("pattern_type") != "stix":
             self.helper.connector_logger.debug(
-                f"[CREATE] Indicator {internal_id} has no STIX pattern"
+                f"[CREATE] Indicator {uuid} has no STIX pattern"
             )
             # TODO: Add support for non-STIX patterns ?
             return
@@ -88,7 +88,7 @@ class ConnectorMispExporter:
 
         # Update the MISP event with OpenCTI data
         event = parser.misp_event
-        event.uuid = internal_id
+        event.uuid = uuid
         event.info = data.get("description", "OpenCTI Indicator")
         event.distribution = self.config.misp_distribution_level
         event.threat_level_id = self.config.misp_threat_level_id
@@ -138,22 +138,20 @@ class ConnectorMispExporter:
         Handle creation
         :param data: Data from the stream
         """
-        internal_id = self.helper.get_attribute_in_extension("id", data)
-        self.helper.connector_logger.info(
-            f"[CREATE] Processing {data['type']} {internal_id}"
-        )
+        uuid = self.helper.get_attribute_in_extension("id", data)
+        self.helper.connector_logger.info(f"[CREATE] Processing {data['type']} {uuid}")
 
         if data["type"] == "indicator":
-            if self.misp.event_exists(internal_id):
+            if self.misp.event_exists(uuid):
                 self.helper.connector_logger.debug(
-                    f"[CREATE] MISP event for indicator {internal_id} already exists"
+                    f"[CREATE] MISP event for indicator {uuid} already exists"
                 )
                 return
 
             event = self._create_event_indicator(data)
             self._add_event(event)
             self.helper.connector_logger.info(
-                f"[CREATE] Created MISP event for indicator {internal_id}"
+                f"[CREATE] Created MISP event for indicator {uuid}"
             )
         else:
             self.helper.connector_logger.debug(
@@ -165,24 +163,22 @@ class ConnectorMispExporter:
         Handle update
         :param data: Data from the stream
         """
-        internal_id = self.helper.get_attribute_in_extension("id", data)
-        self.helper.connector_logger.info(
-            f"[UPDATE] Processing {data['type']} {internal_id}"
-        )
+        uuid = self.helper.get_attribute_in_extension("id", data)
+        self.helper.connector_logger.info(f"[UPDATE] Processing {data['type']} {uuid}")
 
         if data["type"] == "indicator":
             event = self._create_event_indicator(data)
 
             # Update the MISP event if it exists, otherwise create a new one
-            if self.misp.event_exists(internal_id):
+            if self.misp.event_exists(uuid):
                 self.misp.update_event(event, pythonify=True)
                 self.helper.connector_logger.info(
-                    f"[UPDATE] Updated MISP event for indicator {internal_id}"
+                    f"[UPDATE] Updated MISP event for indicator {uuid}"
                 )
             else:
                 self._add_event(event)
                 self.helper.connector_logger.info(
-                    f"[UPDATE] Created MISP event for indicator {internal_id}"
+                    f"[UPDATE] Created MISP event for indicator {uuid}"
                 )
         else:
             self.helper.connector_logger.debug(
@@ -194,21 +190,19 @@ class ConnectorMispExporter:
         Handle deletion
         :param data: Data from the stream
         """
-        internal_id = self.helper.get_attribute_in_extension("id", data)
-        self.helper.connector_logger.info(
-            f"[DELETE] Processing {data['type']} {internal_id}"
-        )
+        uuid = self.helper.get_attribute_in_extension("id", data)
+        self.helper.connector_logger.info(f"[DELETE] Processing {data['type']} {uuid}")
 
         if data["type"] == "indicator":
             # Delete the MISP event if it exists
-            if self.misp.event_exists(internal_id):
-                self.misp.delete_event(internal_id)
+            if self.misp.event_exists(uuid):
+                self.misp.delete_event(uuid)
                 self.helper.connector_logger.info(
-                    f"[DELETE] Deleted MISP event for indicator {internal_id}"
+                    f"[DELETE] Deleted MISP event for indicator {uuid}"
                 )
             else:
                 self.helper.connector_logger.debug(
-                    f"[DELETE] MISP event for indicator {internal_id} not found"
+                    f"[DELETE] MISP event for indicator {uuid} not found"
                 )
         else:
             self.helper.connector_logger.debug(
