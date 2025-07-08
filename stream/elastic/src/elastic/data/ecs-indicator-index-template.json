@@ -47,6 +47,310 @@
         "@timestamp": {
           "type": "date"
         },
+        "threat": {
+          "properties": {
+            "indicator": {
+              "properties": {
+                "confidence": {
+                  "type": "alias",
+                  "path": "threatintel.indicator.confidence"
+                },
+                "description": {
+                  "type": "alias", 
+                  "path": "threatintel.indicator.description"
+                },
+                "first_seen": {
+                  "type": "alias",
+                  "path": "threatintel.indicator.first_seen"
+                },
+                "last_seen": {
+                  "type": "alias",
+                  "path": "threatintel.indicator.last_seen"
+                },
+                "ip": {
+                  "type": "alias",
+                  "path": "threatintel.indicator.ip"
+                },
+                "port": {
+                  "type": "alias",
+                  "path": "threatintel.indicator.port"
+                },
+                "domain": {
+                  "type": "alias",
+                  "path": "threatintel.indicator.domain"
+                },
+                "type": {
+                  "type": "alias",
+                  "path": "threatintel.indicator.type"
+                },
+                "provider": {
+                  "type": "alias",
+                  "path": "threatintel.indicator.provider"
+                },
+                "sightings": {
+                  "type": "alias",
+                  "path": "threatintel.indicator.sightings"
+                },
+                "scanner_stats": {
+                  "type": "alias",
+                  "path": "threatintel.indicator.scanner_stats"
+                },
+                "reference": {
+                  "type": "alias",
+                  "path": "event.url"
+                },
+                "id": {
+                  "type": "alias",
+                  "path": "threatintel.stix.id"
+                },
+                "modified_at": {
+                  "type": "alias",
+                  "path": "threatintel.opencti.updated_at"
+                },
+                "email": {
+                  "properties": {
+                    "address": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.email.address"
+                    }
+                  }
+                },
+                "file": {
+                  "properties": {
+                    "name": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.file.name"
+                    },
+                    "size": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.file.size"
+                    },
+                    "type": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.file.type"
+                    },
+                    "hash": {
+                      "properties": {
+                        "md5": {
+                          "type": "alias",
+                          "path": "threatintel.indicator.file.hash.md5"
+                        },
+                        "sha1": {
+                          "type": "alias",
+                          "path": "threatintel.indicator.file.hash.sha1"
+                        },
+                        "sha256": {
+                          "type": "alias",
+                          "path": "threatintel.indicator.file.hash.sha256"
+                        },
+                        "sha512": {
+                          "type": "alias",
+                          "path": "threatintel.indicator.file.hash.sha512"
+                        },
+                        "ssdeep": {
+                          "type": "alias",
+                          "path": "threatintel.indicator.file.hash.ssdeep"
+                        },
+                        "tlsh": {
+                          "type": "alias",
+                          "path": "threatintel.indicator.file.hash.tlsh"
+                        }
+                      }
+                    },
+                    "pe": {
+                      "properties": {
+                        "imphash": {
+                          "type": "alias",
+                          "path": "threatintel.indicator.file.pe.imphash"
+                        }
+                      }
+                    }
+                  }
+                },
+                "url": {
+                  "properties": {
+                    "original": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.original"
+                    },
+                    "full": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.full"
+                    },
+                    "scheme": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.scheme"
+                    },
+                    "domain": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.domain"
+                    },
+                    "subdomain": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.subdomain"
+                    },
+                    "registered_domain": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.registered_domain"
+                    },
+                    "top_level_domain": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.top_level_domain"
+                    },
+                    "port": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.port"
+                    },
+                    "path": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.path"
+                    },
+                    "query": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.query"
+                    },
+                    "fragment": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.fragment"
+                    },
+                    "username": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.username"
+                    },
+                    "password": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.password"
+                    },
+                    "extension": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.url.extension"
+                    }
+                  }
+                },
+                "registry": {
+                  "properties": {
+                    "key": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.registry.key"
+                    },
+                    "path": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.registry.path"
+                    },
+                    "value": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.registry.value"
+                    },
+                    "data": {
+                      "properties": {
+                        "strings": {
+                          "type": "alias",
+                          "path": "threatintel.indicator.registry.data.strings"
+                        }
+                      }
+                    }
+                  }
+                },
+                "x509": {
+                  "properties": {
+                    "subject": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.x509.subject"
+                    },
+                    "issuer": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.x509.issuer"
+                    },
+                    "serial_number": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.x509.serial_number"
+                    },
+                    "alternative_names": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.x509.alternative_names"
+                    }
+                  }
+                },
+                "as": {
+                  "properties": {
+                    "number": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.as.number"
+                    },
+                    "organization": {
+                      "properties": {
+                        "name": {
+                          "type": "alias",
+                          "path": "threatintel.indicator.as.organization.name"
+                        }
+                      }
+                    }
+                  }
+                },
+                "geo": {
+                  "properties": {
+                    "region_iso_code": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.geo.geo.region_iso_code"
+                    },
+                    "city_name": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.geo.geo.city_name"
+                    },
+                    "country_iso_code": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.geo.geo.country_iso_code"
+                    },
+                    "country_name": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.geo.geo.country_name"
+                    },
+                    "location": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.geo.geo.location"
+                    },
+                    "region_name": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.geo.geo.region_name"
+                    }
+                  }
+                },
+                "marking": {
+                  "properties": {
+                    "tlp": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.marking.tlp"
+                    }
+                  }
+                },
+                "matched": {
+                  "properties": {
+                    "atomic": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.matched.atomic"
+                    },
+                    "field": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.matched.field"
+                    },
+                    "type": {
+                      "type": "alias",
+                      "path": "threatintel.indicator.matched.type"
+                    }
+                  }
+                }
+              }
+            },
+            "feed": {
+              "properties": {
+                "reference": {
+                  "type": "alias",
+                  "path": "event.reference"
+                }
+              }
+            }
+          }
+        },
         "threatintel": {
           "properties": {
             "indicator": {
@@ -367,6 +671,9 @@
                   "ignore_above": 1024,
                   "type": "keyword"
                 },
+                "updated_at": {
+                  "type": "date"
+                },
                 "killchain_phases": {
                   "type": "nested",
                   "properties": {
@@ -394,6 +701,14 @@
                       "type": "keyword"
                     }
                   }
+                }
+              }
+            },
+            "stix": {
+              "properties": {
+                "id": {
+                  "ignore_above": 1024,
+                  "type": "keyword"
                 }
               }
             }
@@ -445,6 +760,18 @@
         "ecs": {
           "properties": {
             "version": {
+              "ignore_above": 1024,
+              "type": "keyword"
+            }
+          }
+        },
+        "event": {
+          "properties": {
+            "reference": {
+              "ignore_above": 1024,
+              "type": "keyword"
+            },
+            "url": {
               "ignore_above": 1024,
               "type": "keyword"
             }
