@@ -36,6 +36,8 @@ defaults: dict = {
             "username": None,
             "password": None,
             "api_key": None,
+            "client_cert": None,
+            "client_key": None,
             "index": "opencti-{now/d}",
             "reduced_privileges": "false",
         },

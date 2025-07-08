@@ -118,6 +118,8 @@ class ElasticConnector:
             )
             self.elasticsearch = Elasticsearch(
                 hosts=self.config.get("output.elasticsearch.hosts", ["localhost:9200"]),
+                client_cert=self.config.get("output.elasticsearch.client_cert", None),
+                client_key=self.config.get("output.elasticsearch.client_key", None),
                 verify_certs=verify_ssl,
                 http_auth=_httpauth,
                 api_key=_apikey,

@@ -91,6 +91,8 @@ def __process_config(argv={}, config={}) -> dict:
                 "username": os.environ.get("ELASTICSEARCH_USERNAME", None),
                 "password": os.environ.get("ELASTICSEARCH_PASSWORD", None),
                 "ssl_verify": os.environ.get("ELASTICSEARCH_SSL_VERIFY", None),
+                "client_cert": os.environ.get("ELASTICSEARCH_CLIENT_CERT", None),
+                "client_key": os.environ.get("ELASTICSEARCH_CLIENT_KEY", None),
                 "reduced_privileges": os.environ.get(
                     "ELASTICSEARCH_REDUCED_PRIVILEGES", None
                 ),
