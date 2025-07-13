@@ -43,6 +43,8 @@ class KVStore:
         splunk_owner: str,
         splunk_kv_store_name: str,
         splunk_ssl_verify: bool,
+        splunk_client_cert: str | None,
+        splunk_client_key: str | None,
     ) -> None:
         self.splunk_url = splunk_url
         self.splunk_token = splunk_token
@@ -51,6 +53,9 @@ class KVStore:
         self.splunk_owner = splunk_owner
         self.splunk_kv_store_name = splunk_kv_store_name
         self.splunk_ssl_verify = splunk_ssl_verify
+        self.splunk_client_cert = (
+            (splunk_client_cert, splunk_client_key) if splunk_client_cert and splunk_client_key else None
+        )
 
     @property
     def collection_url(self) -> str:
@@ -69,6 +74,7 @@ class KVStore:
             data={"name": self.splunk_kv_store_name},
             headers=self.headers,
             verify=self.splunk_ssl_verify,
+            cert=self.splunk_client_cert,
         )
 
         return r.status_code < 300
@@ -81,6 +87,7 @@ class KVStore:
                 json=payload,
                 headers=self.headers,
                 verify=self.splunk_ssl_verify,
+                cert=self.splunk_client_cert,
             )
             if r.status_code != 409:
                 r.raise_for_status()
@@ -93,6 +100,7 @@ class KVStore:
                 json=payload,
                 headers=self.headers,
                 verify=self.splunk_ssl_verify,
+                cert=self.splunk_client_cert,
             )
             if r.status_code == 404:
                 self.create(id, payload)
@@ -105,6 +113,7 @@ class KVStore:
                 f"{self.collection_url}/data/{self.splunk_kv_store_name}/{id}",
                 headers=self.headers,
                 verify=self.splunk_ssl_verify,
+                cert=self.splunk_client_cert,
             )
             if r.status_code != 404:
                 r.raise_for_status()
@@ -370,6 +379,12 @@ if __name__ == "__main__":
         splunk_kv_store_name = get_config_variable(
             "SPLUNK_KV_STORE_NAME", ["splunk", "kv_store_name"], config
         )
+        splunk_client_cert = get_config_variable(
+            "SPLUNK_CLIENT_CERT", ["splunk", "client_cert"], config, default=None
+        )
+        splunk_client_key = get_config_variable(
+            "SPLUNK_CLIENT_KEY", ["splunk", "client_key"], config, default=None
+        )
 
         # additional connector conf
         consumer_count: int = get_config_variable(
@@ -400,6 +415,8 @@ if __name__ == "__main__":
             splunk_owner,
             splunk_kv_store_name,
             splunk_ssl_verify,
+            splunk_client_cert,
+            splunk_client_key,
         )
 
         # create queue
