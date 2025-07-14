@@ -9,6 +9,7 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from queue import Queue
+import threading
 
 import requests
 import yaml
@@ -52,10 +53,12 @@ class KVStore:
         self.splunk_app = splunk_app
         self.splunk_owner = splunk_owner
         self.splunk_kv_store_name = splunk_kv_store_name
-        self.splunk_ssl_verify = splunk_ssl_verify
-        self.splunk_client_cert = (
-            (splunk_client_cert, splunk_client_key) if splunk_client_cert and splunk_client_key else None
-        )
+
+        self.session = requests.Session()
+        if splunk_client_cert and splunk_client_key:
+            self.session.cert = (splunk_client_cert, splunk_client_key)
+        self.session.verify = splunk_ssl_verify
+        self.session.headers.update(self.headers)
 
     @property
     def collection_url(self) -> str:
@@ -69,12 +72,9 @@ class KVStore:
         }
 
     def init(self) -> bool:
-        r = requests.post(
+        r = self.session.post(
             f"{self.collection_url}/config",
             data={"name": self.splunk_kv_store_name},
-            headers=self.headers,
-            verify=self.splunk_ssl_verify,
-            cert=self.splunk_client_cert,
         )
 
         return r.status_code < 300
@@ -82,12 +82,9 @@ class KVStore:
     def create(self, id: str, payload: dict):
         if id is not None and payload is not None:
             payload["_key"] = id
-            r = requests.post(
+            r = self.session.post(
                 f"{self.collection_url}/data/{self.splunk_kv_store_name}",
                 json=payload,
-                headers=self.headers,
-                verify=self.splunk_ssl_verify,
-                cert=self.splunk_client_cert,
             )
             if r.status_code != 409:
                 r.raise_for_status()
@@ -95,12 +92,9 @@ class KVStore:
     def update(self, id: str, payload: dict):
         if id is not None and payload is not None:
             payload["_key"] = id
-            r = requests.put(
+            r = self.session.put(
                 f"{self.collection_url}/data/{self.splunk_kv_store_name}/{id}",
                 json=payload,
-                headers=self.headers,
-                verify=self.splunk_ssl_verify,
-                cert=self.splunk_client_cert,
             )
             if r.status_code == 404:
                 self.create(id, payload)
@@ -109,11 +103,8 @@ class KVStore:
 
     def delete(self, id: str):
         if id is not None:
-            r = requests.delete(
+            r = self.session.delete(
                 f"{self.collection_url}/data/{self.splunk_kv_store_name}/{id}",
-                headers=self.headers,
-                verify=self.splunk_ssl_verify,
-                cert=self.splunk_client_cert,
             )
             if r.status_code != 404:
                 r.raise_for_status()
