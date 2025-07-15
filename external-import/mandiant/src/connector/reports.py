@@ -3,7 +3,7 @@ import itertools
 import re
 
 import stix2
-from pycti import Note
+from pycti import Note, Report
 
 from . import utils
 from .common import create_stix_relationship
@@ -85,7 +85,12 @@ class MandiantReport:
         self.update_vulnerability()
         if not self.connector.mandiant_import_software_cpe:
             self.update_software()
-        self.create_relationships()
+
+        if (self.report_type in self.connector.guess_relationships_reports) or (
+            "all" in self.connector.guess_relationships_reports
+        ):
+            self.create_relationships()
+
         if self.create_notes:
             self.create_note()
         return stix2.parse(self.bundle, allow_custom=True)
@@ -170,6 +175,9 @@ class MandiantReport:
 
     def update_report(self):
         report = utils.retrieve(self.bundle, "type", "report")
+        report["published"] = report["created"]
+        report["x_opencti_stix_ids"] = [report["id"]]
+        report["id"] = Report.generate_id(report["name"], report["published"])
         report["created_by_ref"] = self.identity["standard_id"]
         report["report_types"] = [self.report_type]
         report["object_refs"] = list(
